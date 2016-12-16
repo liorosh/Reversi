@@ -18,7 +18,7 @@ public class Main extends Application {
 	public void start(Stage primaryStage) {
 		window = primaryStage;
 		try {
-			URL url=getClass().getResource("ReversiScene.fxml");
+			URL url=getClass().getResource("params.fxml");
 			AnchorPane pane = FXMLLoader.load(url);
 			//BorderPane root = new BorderPane();
 			Scene parameters = new Scene(pane);
