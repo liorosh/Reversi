@@ -16,6 +16,13 @@ class coordinates{
 	int x;
 	int y;
 }
+class piece extends Circle{
+
+	public piece(int i, Color aqua) {
+
+	}
+
+}
 
 public class Reversicontroller {
 private String turnFlag="player1";
@@ -61,7 +68,7 @@ private String turnFlag="player1";
     }
     @FXML
     public void initialize(){
-    	Circle first=new Circle(24,Color.AQUA);
+    	piece first=new piece(24,Color.AQUA);
     	first.relocate(2, 2);
     	s5_5.getChildren().add(first);
     	Circle second=new Circle(24,Color.AQUA);
@@ -73,6 +80,7 @@ private String turnFlag="player1";
     	Circle fourth=new Circle(24,Color.SLATEGRAY);
     	fourth.relocate(2, 2);
     	s6_5.getChildren().add(fourth);
+
 
 
     }
