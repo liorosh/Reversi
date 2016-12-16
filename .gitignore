@@ -50,3 +50,5 @@ Temporary Items
 bin/application/Main.class
 bin/application/coordinates.class
 bin/application/Main.class
+bin/application/coordinates.class
+*.class

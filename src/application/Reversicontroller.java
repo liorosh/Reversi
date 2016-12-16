@@ -62,18 +62,23 @@ private String turnFlag="player1";
 
     @FXML
     void makeMove(MouseEvent event) {
-
+    	String indexString =  event.getSource().toString().substring(9,event.getSource().toString().length()-1);
     	System.out.print(event.getSource().toString().substring(9,event.getSource().toString().length()-1)+"\n");
+    	int xIndex = Integer.valueOf(indexString.split("_")[0]);
+    	int yIndex = Integer.valueOf(indexString.split("_")[1]);
     	Pane temp=(Pane) event.getSource();
     	Color color= new Color(0, 0, 0, 0);
     	if (turnFlag.matches("player1")){
-    	color=Color.AQUA;
-    	turnFlag="player2";
+    		color=Color.AQUA;
+    		board[xIndex][yIndex]=1;
+    		turnFlag="player2";
     	}
     	else if(turnFlag.matches("player2")){
     		color=Color.SLATEGRAY;
+    		board[xIndex][yIndex]=2;
     		turnFlag="player1";
     	}
+    	
     	piece circle=new piece(24,color);
     	circle.relocate(2, 2);
     	temp.getChildren().add(circle);
