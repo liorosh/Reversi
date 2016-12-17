@@ -182,6 +182,10 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	public void getDifficulty(String difficulty) {
 		System.out.println(difficulty);
 	}
+	
+	public void getPlayerOrComputer(String playAgainst) {
+		System.out.println(playAgainst);
+	}
 	/*
 	 * maybe switch to working with a matrix, and color the pieces according to
 	 * the matrix, it'll be easier should check it in the morning, after

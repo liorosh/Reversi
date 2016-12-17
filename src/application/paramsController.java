@@ -9,6 +9,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,6 +27,15 @@ public class paramsController {
 	@FXML
 	private ChoiceBox<String> Difficulty;
 	
+	@FXML
+	private RadioButton PlayWComputer;
+	
+	@FXML
+	private RadioButton PlayWPlayer;
+	
+	@FXML
+	private ToggleGroup SelectPlayer;
+	
 	@FXML 
 	private void initialize(){
 		Difficulty.setValue("Easy");
@@ -35,12 +46,17 @@ public class paramsController {
 
 	@FXML
 	void handleStart(ActionEvent event) throws IOException {
+		String playerOrComputer = null;
 		String DifficultyChoice = Difficulty.getValue();
+		 if (SelectPlayer.getSelectedToggle() != null) {
+	          playerOrComputer = SelectPlayer.getSelectedToggle().toString().substring(SelectPlayer.getSelectedToggle().toString().lastIndexOf("id=") + 3).split(",")[0];
+	      } 
 		FXMLLoader loader = new FXMLLoader();
 		Parent home_page_parent = loader.load(getClass().getResource(
 				"ReversiScene.fxml").openStream());
 		Reversicontroller reversicontroller = (Reversicontroller)loader.getController();
 		reversicontroller.getDifficulty(DifficultyChoice);
+		reversicontroller.getPlayerOrComputer(playerOrComputer);
 		Scene board = new Scene(home_page_parent);
 		Stage board_stage = (Stage) ((Node) event.getSource()).getScene()
 				.getWindow();
