@@ -11,8 +11,9 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 
 public class Main extends Application {
+	
 	Stage window;
-	Scene parameters, board;
+	Scene parameters;
 	@Override
 	public void start(Stage primaryStage) {
 		window = primaryStage;

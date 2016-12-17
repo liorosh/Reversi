@@ -35,8 +35,12 @@ public class paramsController {
 
 	@FXML
 	void handleStart(ActionEvent event) throws IOException {
-		Parent home_page_parent = FXMLLoader.load(getClass().getResource(
-				"ReversiScene.fxml"));
+		String DifficultyChoice = Difficulty.getValue();
+		FXMLLoader loader = new FXMLLoader();
+		Parent home_page_parent = loader.load(getClass().getResource(
+				"ReversiScene.fxml").openStream());
+		Reversicontroller reversicontroller = (Reversicontroller)loader.getController();
+		reversicontroller.getDifficulty(DifficultyChoice);
 		Scene board = new Scene(home_page_parent);
 		Stage board_stage = (Stage) ((Node) event.getSource()).getScene()
 				.getWindow();
