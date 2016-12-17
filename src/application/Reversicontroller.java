@@ -330,15 +330,16 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
     	}
     }
 	
-	void minmax(int[][]board, ArrayList<coordinates> options, int depth){
-		 if (depth <= 0) // stop step  and also calculate Heuristic func value on the leaf
-         {
+	void minmax(int[][]board, Hashtable<coordinates, options> options, int depth){
+		 if (depth <= 0){ // stop step  and also calculate Heuristic func value on the leaf
              HeuristicFunc(board, options);
              return ;
+         }else{
+         
          }
 	}
 
-	private void HeuristicFunc(int[][] board, ArrayList<coordinates> options) {
+	private void HeuristicFunc(int[][] board, Hashtable<coordinates, options> options) {
 		// TODO Auto-generated method stub
 		
 	}
