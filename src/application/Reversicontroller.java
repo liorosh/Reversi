@@ -31,6 +31,26 @@ class coordinates { // coordinates for each tile
 		this.x = x;
 		this.y = y;
 	}
+	public boolean hasCoordinates(int x, int y){
+		if (this.x==x && this.y==y)
+			return true;
+		return false;
+
+	}
+	//@Override
+	 public boolean equals(Object coordinates){
+		coordinates coordinate=(coordinates) coordinates;
+		if (this.x==coordinate.x &&this.y==coordinate.y)
+			return true;
+
+	return false;
+	}
+	 @Override
+	 public int hashCode(){
+
+		return x;
+
+	 }
 }
 
 class piece extends Circle { // pieces class for players
@@ -49,7 +69,7 @@ class options {
 }
 
 public class Reversicontroller {
-Hashtable<coordinates,options> validmoves=new Hashtable<coordinates,options>();
+Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	private String turnFlag = "player1";
 	@FXML
 	private Pane s0_0, s0_1, s0_2, s0_3, s0_4, s0_5, s0_6, s0_7, s0_8, s0_9, s0_10, s0_11, s1_0, s1_1, s1_2, s1_3, s1_4,
@@ -87,6 +107,27 @@ Hashtable<coordinates,options> validmoves=new Hashtable<coordinates,options>();
 		int yIndex = Integer.valueOf(indexString.split("_")[1]);
 		Pane temp = (Pane) event.getSource();
 		Color color = new Color(0, 0, 0, 0);
+		Object panetochange = null;
+		if(validMoves.containsKey(new coordinates(xIndex,yIndex))){
+			int xcor,ycor;
+		xcor=validMoves.get(new coordinates(xIndex,yIndex)).optionscoordinates.get(0).x;
+		ycor=validMoves.get(new coordinates(xIndex,yIndex)).optionscoordinates.get(0).y;
+		try {
+			panetochange = getClass().getDeclaredField("s" + Integer.toString(xcor) + "_" + Integer.toString(ycor))
+					.get(this);
+		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
+				| SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Pane temp1=(Pane) panetochange;
+		piece piece;
+		piece=(piece) temp1.getChildren().get(0);
+		if(turnFlag.matches("player1"))
+		piece.setFill(color.AQUA);
+		else if (turnFlag.matches("player2"))
+			piece.setFill(color.SLATEGRAY);
+		}
 		if (turnFlag.matches("player1")) {
 			color = Color.AQUA;
 			board[xIndex][yIndex] = 1;
@@ -100,6 +141,7 @@ Hashtable<coordinates,options> validmoves=new Hashtable<coordinates,options>();
 		circle.relocate(2, 2);
 		temp.getChildren().add(circle);
 		calculateMoves();
+
 	}
 	
 	@FXML
@@ -160,11 +202,11 @@ Hashtable<coordinates,options> validmoves=new Hashtable<coordinates,options>();
 					checkLines(i, j, DIAGONAL.downAndRight);
 					checkLines(i, j, DIAGONAL.upAndLeft);
 					checkLines(i, j, DIAGONAL.upAndRight);
-
 				}
 			}
 		}
 		System.out.print("finished moves");
+			;
 	}
 
 	public void checkLines(int x, int y, DIRECTION direction) {
@@ -212,7 +254,7 @@ Hashtable<coordinates,options> validmoves=new Hashtable<coordinates,options>();
 					e.printStackTrace();
 				}
 				Pane temp1 = (Pane) temp;
-				validmoves.put(new coordinates(tempX,tempY), new options(tempstreak));
+				validMoves.put(new coordinates(tempX,tempY), new options(tempstreak));
 				temp1.setDisable(false);
 			}
 
