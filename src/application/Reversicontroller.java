@@ -101,7 +101,7 @@ Hashtable<coordinates,options> validmoves=new Hashtable<coordinates,options>();
 		temp.getChildren().add(circle);
 		calculateMoves();
 	}
-
+	
 	@FXML
 	public void initialize() {
 
@@ -124,6 +124,10 @@ Hashtable<coordinates,options> validmoves=new Hashtable<coordinates,options>();
 		s6_5.setDisable(true);
 		calculateMoves();
 
+	}
+	
+	public void getDifficulty(String difficulty) {
+		System.out.println(difficulty);
 	}
 	/*
 	 * maybe switch to working with a matrix, and color the pieces according to
