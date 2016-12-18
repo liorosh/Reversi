@@ -34,12 +34,16 @@ public class paramsController {
 	private RadioButton PlayWPlayer;
 	
 	@FXML
+	private RadioButton computerWcomputer;
+	
+	@FXML
 	private ToggleGroup SelectPlayer;
 	
 	@FXML 
 	private void initialize(){
 		Difficulty.setValue("Easy");
 		Difficulty.setItems(difficultyList);
+		PlayWComputer.setSelected(true);
 		
 		
 	}
@@ -50,7 +54,8 @@ public class paramsController {
 		String DifficultyChoice = Difficulty.getValue();
 		 if (SelectPlayer.getSelectedToggle() != null) {
 	          playerOrComputer = SelectPlayer.getSelectedToggle().toString().substring(SelectPlayer.getSelectedToggle().toString().lastIndexOf("id=") + 3).split(",")[0];
-	      } 
+	          
+		 } 
 		FXMLLoader loader = new FXMLLoader();
 		Parent home_page_parent = loader.load(getClass().getResource(
 				"ReversiScene.fxml").openStream());
