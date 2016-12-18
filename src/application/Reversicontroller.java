@@ -15,9 +15,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-/**
- * Sample Skeleton for 'ReversiScene.fxml' Controller Class
- */
+
 enum DIAGONAL {
 	upAndLeft, upAndRight, downAndLeft, downAndRight
 }
@@ -92,7 +90,9 @@ public class Reversicontroller
 {
 Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	private String turnFlag = "player1";
-	private boolean computerFlag=true;
+	private boolean computerFlagP2=true;
+	private boolean computerFlagP1=false;
+
 	@FXML
 	private Pane s0_0, s0_1, s0_2, s0_3, s0_4, s0_5, s0_6, s0_7, s0_8, s0_9, s0_10, s0_11, s1_0, s1_1, s1_2, s1_3, s1_4,
 			s1_5, s1_6, s1_7, s1_8, s1_9, s1_10, s1_11, s2_0, s2_1, s2_2, s2_3, s2_4, s2_5, s2_6, s2_7, s2_8, s2_9,
@@ -112,6 +112,32 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	{
 		Pane temp = (Pane) event.getSource();
 		temp.setStyle("-fx-background-color:#dae7f3;");
+		/*String xPane=temp.getId().substring(1).split("_")[0];
+		String yPane=temp.getId().split("_")[1];
+		ArrayList<coordinates> values = validMoves.get(new coordinates(Integer.parseInt(xPane),Integer.parseInt(yPane))).optionscoordinates;
+		System.out.print("b");
+		for(coordinates optioncount:values){
+		try
+		{
+			temp = (Pane) getClass().getDeclaredField("s" + optioncount.x + "_" + optioncount.y)
+					.get(this);
+		}
+		catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
+				| SecurityException e)
+		{
+			e.printStackTrace();
+		}
+		piece piece=(piece) temp.getChildren().get(0);
+		if(turnFlag.matches("player1"))
+		{
+			piece.setFill(Color.AQUA);
+		}
+		else if (turnFlag.matches("player2"))
+		{
+			piece.setFill(Color.SLATEGRAY);
+		}
+		}
+*/
 	}
 
 	@FXML
@@ -124,16 +150,45 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			temp.setStyle("-fx-background-color:white;");
 		else
 			temp.setStyle("-fx-background-color:pink;");
+		//if(!computerFlagP2 && !turnFlag.equals("player2")){
+		/*String xPane=temp.getId().substring(1).split("_")[0];
+		String yPane=temp.getId().split("_")[1];
+		System.out.print(xPane+" "+yPane+"\n");
+		ArrayList<coordinates> values = validMoves.get(new coordinates(Integer.parseInt(xPane),Integer.parseInt(yPane))).optionscoordinates;
+
+		for(coordinates optioncount:values){
+		try
+		{
+			temp = (Pane) getClass().getDeclaredField("s" + optioncount.x + "_" + optioncount.y)
+					.get(this);
+		}
+		catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
+				| SecurityException e)
+		{
+			e.printStackTrace();
+		}
+		piece piece=(piece) temp.getChildren().get(0);
+		if(turnFlag.matches("player1"))
+		{
+			piece.setFill(Color.SLATEGRAY);
+		}
+		else if (turnFlag.matches("player2"))
+		{
+			piece.setFill(Color.AQUA);
+		}
+		}
+*/
 	}
 
 	@FXML
 	void movePieces(MouseEvent event){
 		Pane temp = null;
-		if(turnFlag.matches("player1") || !computerFlag){
+		if(!this.computerFlagP1 &&( this.turnFlag.matches("player1") || !this.computerFlagP2)){
 		temp = (Pane) event.getSource();
 		}
 		makeMove(temp);
-		if(computerFlag && turnFlag.matches("player2")){
+
+		if(computerFlagP2 && turnFlag.matches("player2")){
 			coordinates temp1 = null;
 			//Random generator = new Random();
 			//Object[] values = validMoves.keySet().toArray();
@@ -152,9 +207,6 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			for (MiniMaxNode iter : root.children)
 				if (iter.value == root.value)
 					temp1 = iter.coord;
-				
-			
-			
 			try
 			{
 				temp = (Pane) getClass().getDeclaredField("s" + Integer.toString(temp1.x) + "_" + Integer.toString(temp1.y))
@@ -163,13 +215,60 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
 					| SecurityException e)
 			{
-				// TODO Auto-generated catch block
+
 				e.printStackTrace();
 			}
 			makeMove(temp);
 		}
 	}
+	void movePieces(){
+		Pane temp = null;
 
+		if (computerFlagP1){
+			coordinates temp1;
+			Random generator = new Random();
+			Object[] values = validMoves.keySet().toArray();
+			if(values.length!=0){
+			Object randomValue = values[generator.nextInt(values.length)];
+			temp1=(coordinates) randomValue;
+			try
+			{
+				temp = (Pane) getClass().getDeclaredField("s" + Integer.toString(temp1.x) + "_" + Integer.toString(temp1.y))
+						.get(this);
+			}
+			catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
+					| SecurityException e)
+			{
+				e.printStackTrace();
+			}
+			System.out.println("x: "+temp1.x+"_"+"y:"+temp1.y);
+			makeMove(temp);
+			}
+		}
+		if(computerFlagP2 && turnFlag.matches("player2")){
+			coordinates temp1;
+			Random generator = new Random();
+			Object[] values = validMoves.keySet().toArray();
+			if(values.length!=0){
+			Object randomValue = values[generator.nextInt(values.length)];
+			temp1=(coordinates) randomValue;
+			try
+			{
+				temp = (Pane) getClass().getDeclaredField("s" + Integer.toString(temp1.x) + "_" + Integer.toString(temp1.y))
+						.get(this);
+			}
+			catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
+					| SecurityException e)
+			{
+				e.printStackTrace();
+			}
+			System.out.println("x: "+temp1.x+"_"+"y:"+temp1.y);
+			makeMove(temp);
+			}
+			else
+				turnFlag="player1";
+		}
+	}
 
 	void makeMove(Pane temp)
 	{
@@ -177,8 +276,8 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		Object panetochange = null;
 		int yIndex=Integer.parseInt(temp.getId().substring(1).split("_")[1]);
 		int xIndex=Integer.parseInt(temp.getId().substring(1).split("_")[0]);
-		if(validMoves.containsKey(new coordinates(xIndex,yIndex))){
-			ArrayList<coordinates> pickedOption=validMoves.get(new coordinates(xIndex,yIndex)).optionscoordinates;
+		if(!this.validMoves.isEmpty() && this.validMoves.containsKey(new coordinates(xIndex,yIndex))){
+			ArrayList<coordinates> pickedOption=this.validMoves.get(new coordinates(xIndex,yIndex)).optionscoordinates;
 			while(!pickedOption.isEmpty())
 			{
 				int xcor,ycor;
@@ -192,18 +291,17 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 				catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
 						| SecurityException e)
 				{
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				Pane temp1=(Pane) panetochange;
 				piece piece;
 				piece=(piece) temp1.getChildren().get(0);
-				if(turnFlag.matches("player1"))
+				if(this.turnFlag.matches("player1"))
 				{
 					piece.setFill(Color.AQUA);
 					board[xcor][ycor]=1;
 				}
-				else if (turnFlag.matches("player2"))
+				else if (this.turnFlag.matches("player2"))
 				{
 					piece.setFill(Color.SLATEGRAY);
 					board[xcor][ycor]=2;
@@ -211,7 +309,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 				temp1.setDisable(true);
 				pickedOption.remove(0);
 				}
-			Iterator<Map.Entry<coordinates,options>> it=validMoves.entrySet().iterator();
+			Iterator<Map.Entry<coordinates,options>> it=this.validMoves.entrySet().iterator();
 			Object optionToDisable = null;
 			while(it.hasNext())
 			{
@@ -219,38 +317,71 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 					try {
 						optionToDisable = getClass().getDeclaredField("s"+Integer.toString(entry.getKey().x)+"_"+Integer.toString(entry.getKey().y)).get(this);
 					} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					Pane paneDisable=(Pane)optionToDisable;
 					paneDisable.setDisable(true);
 			}
-		}
-		if (turnFlag.matches("player1"))
+		if (this.turnFlag.matches("player1"))
 		{
 			color = Color.AQUA;
-			board[xIndex][yIndex] = 1;
-			turnFlag = "player2";
-		} else if (turnFlag.matches("player2"))
+			this.board[xIndex][yIndex] = 1;
+			this.turnFlag="player2";
+		} else if (this.turnFlag.matches("player2"))
 		{
 			color = Color.SLATEGRAY;
-			board[xIndex][yIndex] = 2;
-			turnFlag = "player1";
+			this.board[xIndex][yIndex] = 2;
+			this.turnFlag="player1";
 		}
 		piece circle = new piece(24, color);
 		circle.relocate(2, 2);
 		temp.getChildren().add(circle);
 		temp.setDisable(true);
-		validMoves.clear();
-		//if person
-		calculateMoves(board,validMoves);
+		this.validMoves.clear();
+		}
+		else{
+		}
+		if((calculateMoves(board,validMoves))){
+			if(this.turnFlag.matches("player1"))
+				this.turnFlag="player2";
+			else if(this.turnFlag.matches("player2"))
+				this.turnFlag="player1";
+			calculateMoves(board,validMoves);
+
+		}
 		//if computer
 		//minmax
 	}
 
 	@FXML
-	public void initialize()
+	public void initialize() throws InterruptedException
 	{
+		/*piece first = new piece(24, Color.AQUA);
+		first.relocate(2, 2);
+		this.s0_0.getChildren().add(first);
+		this.board[0][0] = 1;
+
+		piece second = new piece(24, Color.AQUA);
+		second.relocate(2, 2);
+		this.s1_1.getChildren().add(second);
+		this.board[1][1] = 1;
+
+		piece third = new piece(24, Color.SLATEGRAY);
+		third.relocate(2, 2);
+		this.s1_0.getChildren().add(third);
+		this.board[1][0] = 2;
+
+		piece fourth = new piece(24, Color.SLATEGRAY);
+		fourth.relocate(2, 2);
+		this.s0_1.getChildren().add(fourth);
+		this.board[0][1] = 2;
+		s6_5.setDisable(true);
+		calculateMoves(this.board,this.validMoves);
+		if(this.computerFlagP1){*/
+
+
+
+
 		piece first = new piece(24, Color.AQUA);
 		first.relocate(2, 2);
 		s5_5.getChildren().add(first);
@@ -267,9 +398,29 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		fourth.relocate(2, 2);
 		s6_5.getChildren().add(fourth);
 		board[6][5] = 2;
-		s6_5.setDisable(true);
 		calculateMoves(board,validMoves);
-
+		if(computerFlagP1){
+			/*Platform.runLater(new Runnable()
+		    {
+				@Override
+		      public void run()
+		      {*/
+					int i=0;
+		        while(i<70)
+		        {
+		        	//Timer timer = new Timer(100, this);
+		       //   try {
+					//TimeUnit.SECONDS.sleep(1);
+				//} catch (InterruptedException e) {
+				//	e.printStackTrace();
+				//}
+		          movePieces();
+		          i++;
+		        }
+		      }
+		   /* });
+		}*/
+System.out.print("x");
 	}
 
 	public void getDifficulty(String difficulty)
@@ -279,6 +430,10 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 
 	public void getPlayerOrComputer(int playAgainst)
 	{
+
+		//human vs. Pc-->1
+		//human vs. human-->2
+		//Pc vs. Pc-->3
 		System.out.println(playAgainst);
 	}
 	/*
@@ -294,12 +449,12 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		return temp;
 	}
 
-	public void calculateMoves(byte[][] board,Hashtable<coordinates,options> options)
+	public boolean calculateMoves(byte[][] board,Hashtable<coordinates,options> options)
 	{
 		int playerNumber = 0;
-		if (turnFlag.matches("player1"))
+		if (this.turnFlag.matches("player1"))
 			playerNumber = 1;
-		else if (turnFlag.matches("player2"))
+		else if (this.turnFlag.matches("player2"))
 			playerNumber = 2;
 		for (int i = 0; i < 12; i++)
 		{
@@ -320,7 +475,9 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 				}
 			}
 		}
-		System.out.print("finished moves");
+
+		//System.out.print("finished moves");
+		return options.isEmpty();
 	}
 
 	public void checkLines(int x, int y, DIRECTION direction, Hashtable<coordinates,options> validMoves, byte[][] board)
@@ -348,9 +505,9 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			break;
 		}
 		int playerNumber = 0;
-		if (turnFlag.matches("player1"))
+		if (this.turnFlag.matches("player1"))
 			playerNumber = 2;
-		else if (turnFlag.matches("player2"))
+		else if (this.turnFlag.matches("player2"))
 			playerNumber = 1;
 		if ((tempX >= 0 && tempX <= 11) &&(tempY>=0 && tempY<=11) && board[tempX][tempY] != 0 && board[tempX][tempY]==playerNumber)
 		{
@@ -371,7 +528,6 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 				catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
 						| SecurityException e)
 				{
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				Pane temp1 = (Pane) temp;
@@ -411,9 +567,9 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
     	tempX+=xvalue;
     	tempY+=yvalue;
     	int playerNumber=0;
-    	if (turnFlag.matches("player1"))
+    	if (this.turnFlag.matches("player1"))
     		playerNumber=2;
-    	else if(turnFlag.matches("player2"))
+    	else if(this.turnFlag.matches("player2"))
     		playerNumber=1;
     	if((tempX>=0 && tempX<=11) && (tempY>=0 && tempY<=11) && board[tempX][tempY]!=0 && board[tempX][tempY]==playerNumber)
     	{
@@ -430,7 +586,6 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 				try {
 					temp = getClass().getDeclaredField("s"+Integer.toString(tempX)+"_"+Integer.toString(tempY)).get(this);
 				} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				Pane temp1=(Pane)temp;
@@ -488,6 +643,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
  				
  			}
  			return;
+
          }
 	}
 	
@@ -508,6 +664,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		
 		return 100*(((double)blackCount - (double)whiteCount)/ ((double)whiteCount+(double)blackCount)) ;
 		
+
 
 	}
 	private void changeBoard(byte board[][], Map.Entry<coordinates,options> entry, byte bOrW){
@@ -530,5 +687,6 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 					whiteCounter++;
 				else if(board[i][j]== 2)
 			        blackCounter++;
+
 	}
 }
