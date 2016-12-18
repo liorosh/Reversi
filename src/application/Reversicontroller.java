@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 
 import javafx.fxml.FXML;
 import javafx.scene.input.MouseEvent;
@@ -75,6 +76,7 @@ public class Reversicontroller
 {
 Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	private String turnFlag = "player1";
+	private boolean computerFlag=false;
 	@FXML
 	private Pane s0_0, s0_1, s0_2, s0_3, s0_4, s0_5, s0_6, s0_7, s0_8, s0_9, s0_10, s0_11, s1_0, s1_1, s1_2, s1_3, s1_4,
 			s1_5, s1_6, s1_7, s1_8, s1_9, s1_10, s1_11, s2_0, s2_1, s2_2, s2_3, s2_4, s2_5, s2_6, s2_7, s2_8, s2_9,
@@ -107,21 +109,40 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	}
 
 	@FXML
-	void makeMove(MouseEvent event)
-	{//if person
-		String indexString = event.getSource().toString().substring(9, event.getSource().toString().length() - 1);
-		int xIndex = Integer.valueOf(indexString.split("_")[0]);
-		int yIndex = Integer.valueOf(indexString.split("_")[1]);
-		Pane temp = (Pane) event.getSource();
+	void movePieces(MouseEvent event){
+		Pane temp = null;
+		if(turnFlag.matches("player1") || !computerFlag){
+		temp = (Pane) event.getSource();
+		}
+		makeMove(temp);
+		if(computerFlag && turnFlag.matches("player2")){
+			coordinates temp1;
+			Random generator = new Random();
+			Object[] values = validMoves.keySet().toArray();
+			Object randomValue = values[generator.nextInt(values.length)];
+			temp1=(coordinates) randomValue;
+			try
+			{
+				temp = (Pane) getClass().getDeclaredField("s" + Integer.toString(temp1.x) + "_" + Integer.toString(temp1.y))
+						.get(this);
+			}
+			catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
+					| SecurityException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			makeMove(temp);
+		}
+	}
+
+
+	void makeMove(Pane temp)
+	{
 		Color color = new Color(0, 0, 0, 0);
 		Object panetochange = null;
-		/*if computer
-		Random       random    = new Random();
-List<String> keys      = new ArrayList<String>(x.keySet());
-String       randomKey = keys.get( random.nextInt(keys.size()) );
-String       value     = x.get(randomKey);
-		 * */
-		 
+		int yIndex=Integer.parseInt(temp.getId().substring(1).split("_")[1]);
+		int xIndex=Integer.parseInt(temp.getId().substring(1).split("_")[0]);
 		if(validMoves.containsKey(new coordinates(xIndex,yIndex))){
 			ArrayList<coordinates> pickedOption=validMoves.get(new coordinates(xIndex,yIndex)).optionscoordinates;
 			while(!pickedOption.isEmpty())
@@ -158,7 +179,8 @@ String       value     = x.get(randomKey);
 				}
 			Iterator<Map.Entry<coordinates,options>> it=validMoves.entrySet().iterator();
 			Object optionToDisable = null;
-			while(it.hasNext()){
+			while(it.hasNext())
+			{
 				Map.Entry<coordinates,options> entry=it.next();
 					try {
 						optionToDisable = getClass().getDeclaredField("s"+Integer.toString(entry.getKey().x)+"_"+Integer.toString(entry.getKey().y)).get(this);
@@ -296,15 +318,15 @@ String       value     = x.get(randomKey);
 			playerNumber = 2;
 		else if (turnFlag.matches("player2"))
 			playerNumber = 1;
-		if (board[tempX][tempY] != 0/*board[tempX][tempY]==playerNumber */)
+		if ((tempX >= 0 && tempX <= 11) &&(tempY>=0 && tempY<=11) && board[tempX][tempY] != 0 && board[tempX][tempY]==playerNumber)
 		{
-			while (board[tempX][tempY] == playerNumber && (tempX > 0 && tempX < 11))
+			while ((tempX>=0 && tempX<=11) &&(tempY>=0 && tempY<=11) && board[tempX][tempY] == playerNumber)
 			{
 				tempstreak.add(new coordinates(tempX,tempY));
 				tempX += xvalue;
 				tempY += yvalue;
 			}
-			if (board[tempX][tempY] == 0)
+			if ((tempX>=0 && tempX<=11) &&(tempY>=0 && tempY<=11) && board[tempX][tempY] == 0)
 			{
 				Object temp = null;
 				try
@@ -359,15 +381,15 @@ String       value     = x.get(randomKey);
     		playerNumber=2;
     	else if(turnFlag.matches("player2"))
     		playerNumber=1;
-    	if(board[tempX][tempY]!=0 && board[tempX][tempY]==playerNumber)
+    	if((tempX>=0 && tempX<=11) && (tempY>=0 && tempY<=11) && board[tempX][tempY]!=0 && board[tempX][tempY]==playerNumber)
     	{
-    		while(board[tempX][tempY]==playerNumber && (tempX>0 && tempX<11))
+    		while((tempX>=0 && tempX<=11) &&(tempY>=0 && tempY<=11) && board[tempX][tempY]==playerNumber)
     		{
     			tempstreak.add(new coordinates(tempX,tempY));
     			tempX+=xvalue;
     			tempY+=yvalue;
     		}
-    		if(board[tempX][tempY]==0)
+    		if((tempX>=0 && tempX<=11) &&(tempY>=0 && tempY<=11) && board[tempX][tempY]==0)
     		{
     			Object temp = null;
 
