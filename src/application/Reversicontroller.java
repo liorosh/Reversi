@@ -388,7 +388,7 @@ String       value     = x.get(randomKey);
     }
 
 	
-	void minmax(int[][]board, Hashtable<coordinates, options> options, int depth){
+	void minimax(int[][]board, Hashtable<coordinates, options> options, int depth){
 		 if (depth <= 0){ // stop step  and also calculate Heuristic func value on the leaf
              HeuristicFunc(board, options);
              return ;
