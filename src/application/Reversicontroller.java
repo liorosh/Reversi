@@ -56,6 +56,22 @@ class coordinates { // coordinates for each tile
 	 }
 }
 
+
+
+
+class MiniMaxNode{
+    public ArrayList<MiniMaxNode> children;
+    public MiniMaxNode parent;
+    public boolean isMinOrMax;
+    public double value;
+    public int nOfWhite;
+    public int nOfBlack;
+    public byte[][] board;
+    public boolean blackOrWhite;
+    public coordinates coord;
+      
+}
+
 class piece extends Circle { // pieces class for players
 	public piece(double i, Color aqua) {
 		setRadius(i);
@@ -76,7 +92,7 @@ public class Reversicontroller
 {
 Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	private String turnFlag = "player1";
-	private boolean computerFlag=false;
+	private boolean computerFlag=true;
 	@FXML
 	private Pane s0_0, s0_1, s0_2, s0_3, s0_4, s0_5, s0_6, s0_7, s0_8, s0_9, s0_10, s0_11, s1_0, s1_1, s1_2, s1_3, s1_4,
 			s1_5, s1_6, s1_7, s1_8, s1_9, s1_10, s1_11, s2_0, s2_1, s2_2, s2_3, s2_4, s2_5, s2_6, s2_7, s2_8, s2_9,
@@ -88,6 +104,8 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			s9_11, s10_0, s10_1, s10_2, s10_3, s10_4, s10_5, s10_6, s10_7, s10_8, s10_9, s10_10, s10_11, s11_0, s11_1,
 			s11_2, s11_3, s11_4, s11_5, s11_6, s11_7, s11_8, s11_9, s11_10, s11_11;
 	private byte[][] board = new byte[12][12];
+	private byte whiteCounter;
+	private byte blackCounter;
 
 	@FXML
 	void highlight(MouseEvent event)
@@ -116,11 +134,27 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		}
 		makeMove(temp);
 		if(computerFlag && turnFlag.matches("player2")){
-			coordinates temp1;
-			Random generator = new Random();
-			Object[] values = validMoves.keySet().toArray();
-			Object randomValue = values[generator.nextInt(values.length)];
-			temp1=(coordinates) randomValue;
+			coordinates temp1 = null;
+			//Random generator = new Random();
+			//Object[] values = validMoves.keySet().toArray();
+			//Object randomValue = values[generator.nextInt(values.length)];
+			//temp1=(coordinates) randomValue;
+			MiniMaxNode root = new MiniMaxNode();
+			root.board = board;
+			root.blackOrWhite = true;
+			root.children = new ArrayList<MiniMaxNode>();
+			root.isMinOrMax = true;
+			root.value = Double.MIN_VALUE;
+			countBlackAndWhite(board);
+			root.nOfBlack = blackCounter;
+			root.nOfWhite = whiteCounter;
+			minimax(root, 2);
+			for (MiniMaxNode iter : root.children)
+				if (iter.value == root.value)
+					temp1 = iter.coord;
+				
+			
+			
 			try
 			{
 				temp = (Pane) getClass().getDeclaredField("s" + Integer.toString(temp1.x) + "_" + Integer.toString(temp1.y))
@@ -275,21 +309,21 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 					continue;
 				else if (board[i][j] == playerNumber)
 				{
-					checkLines(i, j, DIRECTION.ascending);
-					checkLines(i, j, DIRECTION.descending);
-					checkLines(i, j, DIRECTION.rightToLeft);
-					checkLines(i, j, DIRECTION.leftToRight);
-					checkLines(i, j, DIAGONAL.downAndLeft);
-					checkLines(i, j, DIAGONAL.downAndRight);
-					checkLines(i, j, DIAGONAL.upAndLeft);
-					checkLines(i, j, DIAGONAL.upAndRight);
+					checkLines(i, j, DIRECTION.ascending, options, board);
+					checkLines(i, j, DIRECTION.descending, options, board);
+					checkLines(i, j, DIRECTION.rightToLeft, options, board);
+					checkLines(i, j, DIRECTION.leftToRight, options, board);
+					checkLines(i, j, DIAGONAL.downAndLeft, options, board);
+					checkLines(i, j, DIAGONAL.downAndRight, options, board);
+					checkLines(i, j, DIAGONAL.upAndLeft, options, board);
+					checkLines(i, j, DIAGONAL.upAndRight, options, board);
 				}
 			}
 		}
 		System.out.print("finished moves");
 	}
 
-	public void checkLines(int x, int y, DIRECTION direction)
+	public void checkLines(int x, int y, DIRECTION direction, Hashtable<coordinates,options> validMoves, byte[][] board)
 	{
 		int tempX = x, tempY = y;
 		byte xvalue = 0, yvalue = 0;
@@ -350,7 +384,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		}
 	}
 
-	public void checkLines(int x, int y,DIAGONAL diagonal)
+	public void checkLines(int x, int y,DIAGONAL diagonal, Hashtable<coordinates,options> validMoves, byte[][] board)
 	{
     	int tempX=x,tempY=y;
     	ArrayList<coordinates> tempstreak=new ArrayList<coordinates>();
@@ -410,18 +444,91 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
     }
 
 	
-	void minimax(int[][]board, Hashtable<coordinates, options> options, int depth){
-		 if (depth <= 0){ // stop step  and also calculate Heuristic func value on the leaf
-             //HeuristicFunc(board, options);
+	void minimax(MiniMaxNode node, int depth){
+		
+		Hashtable<coordinates,options> allOptions=new Hashtable<coordinates,options>();
+		 if (depth <= 0){
+			 // stop step  and also calculate Heuristic func value on the leaf
+			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
+             
              return ;
          }else{
-         
+        	calculateMoves(node.board,allOptions); 
+        	Iterator<Map.Entry<coordinates,options>> it=allOptions.entrySet().iterator();
+ 			while(it.hasNext())
+ 			{
+ 				Map.Entry<coordinates,options> entry=it.next();
+ 				MiniMaxNode newNode = new MiniMaxNode();
+ 				newNode.children = new ArrayList<MiniMaxNode>();
+ 				newNode.coord = entry.getKey();
+ 				newNode.board = duplicateBoard(node.board);
+ 				newNode.isMinOrMax = !node.isMinOrMax;
+ 				if (newNode.isMinOrMax){
+ 					newNode.value = Double.MIN_VALUE;
+ 				}else{
+ 					newNode.value = Double.MAX_VALUE;	
+ 				}
+ 				node.children.add(newNode);
+ 				byte tempBoW= (byte) (((newNode.blackOrWhite) ? 1 : 0) + 1);
+ 				changeBoard(newNode.board, entry, tempBoW);
+ 				newNode.blackOrWhite = !node.blackOrWhite;
+ 				if(newNode.blackOrWhite){
+ 					newNode.nOfBlack = node.nOfBlack + entry.getValue().optionscoordinates.size() + 1;
+ 					newNode.nOfWhite = node.nOfWhite - entry.getValue().optionscoordinates.size();
+ 				}else{
+ 					newNode.nOfWhite = node.nOfWhite + entry.getValue().optionscoordinates.size() + 1;
+ 					newNode.nOfBlack = node.nOfBlack - entry.getValue().optionscoordinates.size();
+ 				}
+ 				minimax(newNode, depth - 1);
+ 				if(node.isMinOrMax){
+ 					node.value = Math.max(node.value, newNode.value);
+ 				}else{
+ 					node.value = Math.min(node.value, newNode.value);
+ 				}
+ 				
+ 			}
+ 			return;
          }
 	}
+	
+	private byte[][] duplicateBoard(byte[][] board){
+		byte[][] tempBoard = new byte[12][12];
+		for (int i=0; i<12; i++)
+			for(int j=0; j<12; j++)
+				tempBoard[i][j]=board[i][j];
+		return tempBoard;
+	}
+	
+	
+	
+	private double HeuristicFunc(int whiteCount, int blackCount, boolean player){
+		if (player){
+			return 100*(((double)whiteCount - (double)blackCount) / ((double)whiteCount+(double)blackCount)) ;
+		}
+		
+		return 100*(((double)blackCount - (double)whiteCount)/ ((double)whiteCount+(double)blackCount)) ;
+		
 
-
-	private void HeuristicFunc(int whiteCount, int blackCount){
-		// TODO Auto-generated method stub
-
+	}
+	private void changeBoard(byte board[][], Map.Entry<coordinates,options> entry, byte bOrW){
+		ArrayList<coordinates> flipdisks = entry.getValue().optionscoordinates;
+		int xcor = entry.getKey().x;
+		int ycor = entry.getKey().y;
+		board[xcor][ycor]=bOrW;
+		while(!flipdisks.isEmpty())
+		{
+			xcor=flipdisks.get(0).x;
+			ycor=flipdisks.get(0).y;
+			board[xcor][ycor]=bOrW;
+			flipdisks.remove(0);
+		}
+	}
+	private void countBlackAndWhite(byte[][] board){
+		for (int i=0; i<12; i++)
+			for(int j=0; j<12; j++)
+				if(board[i][j]== 1)
+					whiteCounter++;
+				else if(board[i][j]== 2)
+			        blackCounter++;
 	}
 }
