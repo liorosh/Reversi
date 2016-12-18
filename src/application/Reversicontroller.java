@@ -243,7 +243,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		System.out.println(difficulty);
 	}
 
-	public void getPlayerOrComputer(String playAgainst)
+	public void getPlayerOrComputer(int playAgainst)
 	{
 		System.out.println(playAgainst);
 	}
@@ -412,7 +412,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	
 	void minimax(int[][]board, Hashtable<coordinates, options> options, int depth){
 		 if (depth <= 0){ // stop step  and also calculate Heuristic func value on the leaf
-             HeuristicFunc(board, options);
+             //HeuristicFunc(board, options);
              return ;
          }else{
          
@@ -420,8 +420,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	}
 
 
-	private void HeuristicFunc(int[][] board, Hashtable<coordinates, options> options) {
-
+	private void HeuristicFunc(int whiteCount, int blackCount){
 		// TODO Auto-generated method stub
 
 	}
