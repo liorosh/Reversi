@@ -395,7 +395,7 @@ System.out.print("x");
 		System.out.println(difficulty);
 	}
 
-	public void getPlayerOrComputer(String playAgainst)
+	public void getPlayerOrComputer(int playAgainst)
 	{
 
 		//human vs. Pc-->1
@@ -568,7 +568,7 @@ System.out.print("x");
 
 	void minimax(int[][]board, Hashtable<coordinates, options> options, int depth){
 		 if (depth <= 0){ // stop step  and also calculate Heuristic func value on the leaf
-             HeuristicFunc(board, options);
+             //HeuristicFunc(board, options);
              return ;
          }else{
 
@@ -576,7 +576,9 @@ System.out.print("x");
 	}
 
 
-	private void HeuristicFunc(int[][] board, Hashtable<coordinates, options> options) {
+
+	private void HeuristicFunc(int whiteCount, int blackCount){
+		// TODO Auto-generated method stub
 
 
 	}
