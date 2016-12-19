@@ -67,7 +67,7 @@ class MiniMaxNode{
     public byte[][] board;
     public boolean blackOrWhite;
     public coordinates coord;
-      
+
 }
 
 class piece extends Circle { // pieces class for players
@@ -534,8 +534,10 @@ System.out.print("x");
 				if(validMoves.containsKey(new coordinates(tempX,tempY)))
 					validMoves.get(new coordinates(tempX,tempY)).optionscoordinates.addAll(tempstreak);
 				else
-				validMoves.put(new coordinates(tempX,tempY), new options(tempstreak));
+					validMoves.put(new coordinates(tempX,tempY), new options(tempstreak));
+				if(validMoves.equals(this.validMoves))
 				temp1.setDisable(false);
+
 			}
 		}
 	}
@@ -592,23 +594,27 @@ System.out.print("x");
 				if(validMoves.containsKey(new coordinates(tempX,tempY)))
 					validMoves.get(new coordinates(tempX,tempY)).optionscoordinates.addAll(tempstreak);
 				else
-				validMoves.put(new coordinates(tempX,tempY), new options(tempstreak));
-	    		temp1.setDisable(false);
+					validMoves.put(new coordinates(tempX,tempY), new options(tempstreak));
+				if(validMoves.equals(this.validMoves))
+				temp1.setDisable(false);
+
     		}
     	}
     }
 
-	
+
 	void minimax(MiniMaxNode node, int depth){
-		
+
 		Hashtable<coordinates,options> allOptions=new Hashtable<coordinates,options>();
 		 if (depth <= 0){
 			 // stop step  and also calculate Heuristic func value on the leaf
 			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
-             
+
              return ;
-         }else{
-        	calculateMoves(node.board,allOptions); 
+         }
+		 else
+		 {
+        	calculateMoves(node.board,allOptions);
         	Iterator<Map.Entry<coordinates,options>> it=allOptions.entrySet().iterator();
  			while(it.hasNext())
  			{
@@ -620,33 +626,39 @@ System.out.print("x");
  				newNode.isMinOrMax = !node.isMinOrMax;
  				if (newNode.isMinOrMax){
  					newNode.value = Double.MIN_VALUE;
- 				}else{
- 					newNode.value = Double.MAX_VALUE;	
+ 				}
+ 				else{
+ 					newNode.value = Double.MAX_VALUE;
  				}
  				node.children.add(newNode);
  				byte tempBoW= (byte) (((newNode.blackOrWhite) ? 1 : 0) + 1);
  				changeBoard(newNode.board, entry, tempBoW);
  				newNode.blackOrWhite = !node.blackOrWhite;
- 				if(newNode.blackOrWhite){
+ 				if(newNode.blackOrWhite)
+ 				{
  					newNode.nOfBlack = node.nOfBlack + entry.getValue().optionscoordinates.size() + 1;
  					newNode.nOfWhite = node.nOfWhite - entry.getValue().optionscoordinates.size();
- 				}else{
+ 				}
+ 				else
+ 				{
  					newNode.nOfWhite = node.nOfWhite + entry.getValue().optionscoordinates.size() + 1;
  					newNode.nOfBlack = node.nOfBlack - entry.getValue().optionscoordinates.size();
  				}
  				minimax(newNode, depth - 1);
- 				if(node.isMinOrMax){
+ 				if(node.isMinOrMax)
+ 				{
  					node.value = Math.max(node.value, newNode.value);
- 				}else{
+ 				}
+ 				else
+ 				{
  					node.value = Math.min(node.value, newNode.value);
  				}
- 				
  			}
  			return;
 
          }
 	}
-	
+
 	private byte[][] duplicateBoard(byte[][] board){
 		byte[][] tempBoard = new byte[12][12];
 		for (int i=0; i<12; i++)
@@ -654,33 +666,33 @@ System.out.print("x");
 				tempBoard[i][j]=board[i][j];
 		return tempBoard;
 	}
-	
-	
-	
+
+
+
 	private double HeuristicFunc(int whiteCount, int blackCount, boolean player){
 		if (player){
 			return 100*(((double)whiteCount - (double)blackCount) / ((double)whiteCount+(double)blackCount)) ;
 		}
-		
+
 		return 100*(((double)blackCount - (double)whiteCount)/ ((double)whiteCount+(double)blackCount)) ;
-		
+
 	}
-	
+
 	private double HeuristicFunc2(int whiteCorners, int blackCorners, boolean player){
 		if (player){
 			return 100*(((double)whiteCorners - (double)blackCorners) / ((double)whiteCorners+(double)blackCorners)) ;
 		}
-		
+
 		return 100*(((double)blackCorners - (double)whiteCorners)/ ((double)whiteCorners+(double)blackCorners)) ;
-		
+
 	}
-	
+
 	private double HeuristicFunc3(byte board[][], boolean player){
-		
+		return 0.5;
 	}
-	
-	
-	
+
+
+
 	private void changeBoard(byte board[][], Map.Entry<coordinates,options> entry, byte bOrW){
 		ArrayList<coordinates> flipdisks = entry.getValue().optionscoordinates;
 		int xcor = entry.getKey().x;
@@ -703,22 +715,22 @@ System.out.print("x");
 			        blackCounter++;
 
 	}
-	
+
 	void alphaBeta(MiniMaxNode node, int depth){
 		node.value = maxValue ( node, Double.MIN_VALUE, Double.MAX_VALUE, depth );
-	
+
 	}
-	
+
 	double maxValue(MiniMaxNode node, double alpha, double beta, int depth){
-		
+
 		Hashtable<coordinates,options> allOptions=new Hashtable<coordinates,options>();
 		 if (depth <= 0){
 			 // stop step  and also calculate Heuristic func value on the leaf
 			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
-            
+
             return node.value ;
         }else{
-        	calculateMoves(node.board,allOptions); 
+        	calculateMoves(node.board,allOptions);
         	Iterator<Map.Entry<coordinates,options>> it=allOptions.entrySet().iterator();
  			while(it.hasNext())
  			{
@@ -731,7 +743,7 @@ System.out.print("x");
  				if (newNode.isMinOrMax){
  					newNode.value = Double.MIN_VALUE;
  				}else{
- 					newNode.value = Double.MAX_VALUE;	
+ 					newNode.value = Double.MAX_VALUE;
  				}
  				node.children.add(newNode);
  				byte tempBoW= (byte) (((newNode.blackOrWhite) ? 1 : 0) + 1);
@@ -746,24 +758,24 @@ System.out.print("x");
  				}
  				node.value = Math.max(node.value, minValue(newNode, alpha, beta, depth - 1));
  				if (node.value >= beta)
- 					break; 
+ 					break;
  				alpha = Math.max (alpha, node.value);
- 				
+
  			}
  			return node.value;
-        
+
         }
 	}
-	
+
 	double minValue(MiniMaxNode node, double alpha, double beta, int depth){
 		Hashtable<coordinates,options> allOptions=new Hashtable<coordinates,options>();
 		 if (depth <= 0){
 			 // stop step  and also calculate Heuristic func value on the leaf
 			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
-           
+
            return node.value ;
        }else{
-       	calculateMoves(node.board,allOptions); 
+       	calculateMoves(node.board,allOptions);
        	Iterator<Map.Entry<coordinates,options>> it=allOptions.entrySet().iterator();
 			while(it.hasNext())
 			{
@@ -776,7 +788,7 @@ System.out.print("x");
 				if (newNode.isMinOrMax){
 					newNode.value = Double.MIN_VALUE;
 				}else{
-					newNode.value = Double.MAX_VALUE;	
+					newNode.value = Double.MAX_VALUE;
 				}
 				node.children.add(newNode);
 				byte tempBoW= (byte) (((newNode.blackOrWhite) ? 1 : 0) + 1);
@@ -791,15 +803,15 @@ System.out.print("x");
 				}
 				node.value = Math.min(node.value, maxValue(newNode, alpha, beta, depth - 1));
 				if (node.value <= alpha)
-					break; 
+					break;
 				beta = Math.min (beta, node.value);
-				
+
 			}
 			return node.value;
-       
+
        }
-		
+
 	}
-	
-	
+
+
 }
