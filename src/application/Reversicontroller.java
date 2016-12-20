@@ -675,9 +675,6 @@ System.out.print("x");
 		
 	}
 	
-	private double HeuristicFunc3(byte board[][], boolean player){
-		
-	}
 	
 	
 	
