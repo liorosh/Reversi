@@ -3,17 +3,23 @@
  */
 package application;
 
+
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
+import javax.swing.SwingUtilities;
+
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
 
 enum DIAGONAL {
@@ -56,7 +62,6 @@ class coordinates { // coordinates for each tile
 
 
 
-
 class MiniMaxNode{
     public ArrayList<MiniMaxNode> children;
     public MiniMaxNode parent;
@@ -91,7 +96,7 @@ public class Reversicontroller
 Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	private String turnFlag = "player1";
 	private boolean computerFlagP2=true;
-	private boolean computerFlagP1=false;
+	private boolean computerFlagP1=true;
 
 	@FXML
 	private Pane s0_0, s0_1, s0_2, s0_3, s0_4, s0_5, s0_6, s0_7, s0_8, s0_9, s0_10, s0_11, s1_0, s1_1, s1_2, s1_3, s1_4,
@@ -107,6 +112,29 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	private byte whiteCounter;
 	private byte blackCounter;
 
+
+class pcVSpc implements Runnable {
+
+
+	public void run() {
+		int i=0;
+		while(i<70){
+		movePieces();
+		/*try {
+			TimeUnit.SECONDS.sleep(1);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		i++;
+	}
+	}
+
+	public void change(Pane assign,piece circle){
+		Platform.runLater ( () -> 	assign.getChildren().add(circle));
+		//assign.getChildren().add(circle);
+	}
+}
 	@FXML
 	void highlight(MouseEvent event)
 	{
@@ -235,7 +263,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
 					| SecurityException e)
 			{
-
+				System.out.println("it was "+turnFlag+"with chosen move:"+ temp.getId());
 				e.printStackTrace();
 			}
 			makeMove(temp);
@@ -244,7 +272,6 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 	}
 	void movePieces(){
 		Pane temp = null;
-
 		if (computerFlagP1){
 			coordinates temp1;
 			Random generator = new Random();
@@ -262,10 +289,16 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			{
 				e.printStackTrace();
 			}
-			System.out.println("x: "+temp1.x+"_"+"y:"+temp1.y);
+			System.out.println(turnFlag+" plays:"+"x: "+temp1.x+"_"+"y:"+temp1.y);
 			makeMove(temp);
 			}
 		}
+		/*try {
+			TimeUnit.SECONDS.sleep(1);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
 		if(computerFlagP2 && turnFlag.matches("player2")){
 			coordinates temp1;
 			Random generator = new Random();
@@ -283,7 +316,7 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			{
 				e.printStackTrace();
 			}
-			System.out.println("x: "+temp1.x+"_"+"y:"+temp1.y);
+			System.out.println(turnFlag+" plays:"+"x: "+temp1.x+"_"+"y:"+temp1.y);
 			makeMove(temp);
 			}
 			else
@@ -356,11 +389,15 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		}
 		piece circle = new piece(24, color);
 		circle.relocate(2, 2);
-		temp.getChildren().add(circle);
+		pcVSpc pc=new pcVSpc();
+		pc.change(temp,circle);
+
 		temp.setDisable(true);
 		this.validMoves.clear();
 		}
+
 		if((calculateMoves(board,validMoves, this.turnFlag))){
+
 			if(this.turnFlag.matches("player1"))
 				this.turnFlag="player2";
 			else if(this.turnFlag.matches("player2"))
@@ -419,26 +456,11 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 		board[6][5] = 2;
 		calculateMoves(board,validMoves, this.turnFlag);
 		if(computerFlagP1){
-			/*Platform.runLater(new Runnable()
-		    {
-				@Override
-		      public void run()
-		      {*/
-					int i=0;
-		        while(i<70)
-		        {
-		        	//Timer timer = new Timer(100, this);
-		       //   try {
-					//TimeUnit.SECONDS.sleep(1);
-				//} catch (InterruptedException e) {
-				//	e.printStackTrace();
-				//}
-		          movePieces();
-		          i++;
-		        }
-		      }
-		   /* });
-		}*/
+			pcVSpc functioncall =new pcVSpc();
+			Thread thread= new Thread(functioncall);
+			thread.start();
+
+		}
 System.out.print("x");
 	}
 
