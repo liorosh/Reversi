@@ -687,6 +687,7 @@ System.out.print("x");
 
 	}
 
+
 	private void changeBoard(byte board[][], Map.Entry<coordinates,options> entry, byte bOrW){
 		ArrayList<coordinates> flipdisks = entry.getValue().optionscoordinates;
 		int xcor = entry.getKey().x;
