@@ -4,24 +4,30 @@
 package application;
 
 
+import java.awt.EventQueue;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
-
-import javax.swing.SwingUtilities;
-
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.util.Duration;
+import javafx.stage.Stage;
 
-
+//we defined enum to distinguish each of our directions checking and to overload the function
 enum DIAGONAL {
 	upAndLeft, upAndRight, downAndLeft, downAndRight
 }
@@ -62,7 +68,7 @@ class coordinates { // coordinates for each tile
 
 
 
-class MiniMaxNode{
+class MiniMaxNode{//class for sending all relevant data to min-max algorith
     public ArrayList<MiniMaxNode> children;
     public MiniMaxNode parent;
     public boolean isMinOrMax;
@@ -75,14 +81,14 @@ class MiniMaxNode{
 
 }
 
-class piece extends Circle { // pieces class for players
+class piece extends Circle { // pieces class for players,inherits from circle for shape attributes
 	public piece(double i, Color aqua) {
 		setRadius(i);
 		setFill(aqua);
 	}
 }
 
-class options {
+class options {//options is the pieces to convert for specific playes move
 	ArrayList<coordinates> optionscoordinates=new ArrayList<coordinates>();
 	public options(ArrayList<coordinates> tempstreak)
 	{
@@ -93,10 +99,33 @@ class options {
 
 public class Reversicontroller
 {
+	//validmoves represents the moves a player can make at any given moment and contains the pieces it'll change to the players color depending on the move
 Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
-	private String turnFlag = "player1";
-	private boolean computerFlagP2=true;
-	private boolean computerFlagP1=true;
+//flags for knowing the certain state of the game
+private String turnFlag = "player1";
+	private boolean computerFlagP2;
+	private boolean computerFlagP1;
+	private boolean firstTurn=true;
+	private String p1Heuristic;
+	private String p2Heuristic;
+	private String p1MinOrMax;
+	private String p2MinOrMax;
+	private int depth;
+
+	//board state and each of pieces count
+	private byte[][] board = new byte[12][12];
+	private byte whiteCounter;
+	private byte blackCounter;
+
+	//gui for objects for display purposes
+    @FXML
+    private Label turnLabel;
+
+    @FXML
+    private Pane turnShow,endGame;
+
+    @FXML
+    private TextField winner;
 
 	@FXML
 	private Pane s0_0, s0_1, s0_2, s0_3, s0_4, s0_5, s0_6, s0_7, s0_8, s0_9, s0_10, s0_11, s1_0, s1_1, s1_2, s1_3, s1_4,
@@ -108,53 +137,66 @@ Hashtable<coordinates,options> validMoves=new Hashtable<coordinates,options>();
 			s8_6, s8_7, s8_8, s8_9, s8_10, s8_11, s9_0, s9_1, s9_2, s9_3, s9_4, s9_5, s9_6, s9_7, s9_8, s9_9, s9_10,
 			s9_11, s10_0, s10_1, s10_2, s10_3, s10_4, s10_5, s10_6, s10_7, s10_8, s10_9, s10_10, s10_11, s11_0, s11_1,
 			s11_2, s11_3, s11_4, s11_5, s11_6, s11_7, s11_8, s11_9, s11_10, s11_11;
-	private byte[][] board = new byte[12][12];
-	private byte whiteCounter;
-	private byte blackCounter;
-
-
-class pcVSpc implements Runnable {
-
+	Pane[][] panel = new Pane[12][12];
+	//this class is for creating a thread to change gui
+	class pcVSpc implements Runnable {
 
 	public void run() {
-		int i=0;
-		while(i<70){
-		movePieces();
-		/*try {
-			TimeUnit.SECONDS.sleep(1);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
-		i++;
 	}
-	}
-
 	public void change(Pane assign,piece circle){
 		Platform.runLater ( () -> 	assign.getChildren().add(circle));
-		//assign.getChildren().add(circle);
 	}
-}
+
+	}
+	class chageBoard implements Runnable{
+		Pane temp1;
+		ArrayList<coordinates> pickedOption;
+		int xcor;
+		int ycor;
+		public chageBoard(Pane temp1, ArrayList<coordinates> pickedOption, int xcor, int ycor){
+			this.temp1=temp1;
+			this.pickedOption=pickedOption;
+			this.xcor=xcor;
+			this.ycor=ycor;
+		}
+		public void run(){
+			changePieces();
+		}
+		public void changePieces(/*Pane temp1, ArrayList<coordinates> pickedOption, int xcor, int ycor*/){
+
+			piece piece;
+			piece=(piece) temp1.getChildren().get(0);
+			if(turnFlag.matches("player1"))
+			{
+				piece.setFill(Color.AQUA);
+				board[xcor][ycor]=1;
+			}
+			else if (turnFlag.matches("player2"))
+			{
+				piece.setFill(Color.SLATEGRAY);
+				board[xcor][ycor]=2;
+			}
+			temp1.setDisable(true);
+			pickedOption.remove(0);
+			//Platform.runLater ( () -> 	changePieces());
+		}
+
+
+	}
+
+
+	//gui function to highlight the move with mouse cursor
 	@FXML
 	void highlight(MouseEvent event)
 	{
+		if(!computerFlagP1 ||(!computerFlagP2 && this.turnFlag.matches("player2"))){
 		Pane temp = (Pane) event.getSource();
 		temp.setStyle("-fx-background-color:#dae7f3;");
-		/*String xPane=temp.getId().substring(1).split("_")[0];
+		String xPane=temp.getId().substring(1).split("_")[0];
 		String yPane=temp.getId().split("_")[1];
 		ArrayList<coordinates> values = validMoves.get(new coordinates(Integer.parseInt(xPane),Integer.parseInt(yPane))).optionscoordinates;
-		System.out.print("b");
 		for(coordinates optioncount:values){
-		try
-		{
-			temp = (Pane) getClass().getDeclaredField("s" + optioncount.x + "_" + optioncount.y)
-					.get(this);
-		}
-		catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-				| SecurityException e)
-		{
-			e.printStackTrace();
-		}
+			temp=panel[optioncount.x][optioncount.y];
 		piece piece=(piece) temp.getChildren().get(0);
 		if(turnFlag.matches("player1"))
 		{
@@ -165,12 +207,16 @@ class pcVSpc implements Runnable {
 			piece.setFill(Color.SLATEGRAY);
 		}
 		}
-*/
+		}
 	}
-
+	//gui function to remove highlight the move with mouse cursor
 	@FXML
 	void remove_highlight(MouseEvent event)
 	{
+		if(!computerFlagP1 ||!(computerFlagP2 && this.turnFlag.matches("player2"))){
+		EventQueue.invokeLater(new Runnable(){
+			public void run(){
+
 		Pane temp = (Pane) event.getSource();
 		coordinates cord;
 		cord = getCoordinates(temp.getId().substring(1, temp.getId().length()));
@@ -178,266 +224,230 @@ class pcVSpc implements Runnable {
 			temp.setStyle("-fx-background-color:white;");
 		else
 			temp.setStyle("-fx-background-color:pink;");
-		//if(!computerFlagP2 && !turnFlag.equals("player2")){
-		/*String xPane=temp.getId().substring(1).split("_")[0];
-		String yPane=temp.getId().split("_")[1];
-		System.out.print(xPane+" "+yPane+"\n");
-		ArrayList<coordinates> values = validMoves.get(new coordinates(Integer.parseInt(xPane),Integer.parseInt(yPane))).optionscoordinates;
-
-		for(coordinates optioncount:values){
-		try
-		{
-			temp = (Pane) getClass().getDeclaredField("s" + optioncount.x + "_" + optioncount.y)
-					.get(this);
+			String xPane=temp.getId().substring(1).split("_")[0];
+			String yPane=temp.getId().split("_")[1];
+			System.out.print(xPane+" "+yPane+"\n");
+			if((validMoves.get(new coordinates(Integer.parseInt(xPane),Integer.parseInt(yPane)))!=null)){
+				ArrayList<coordinates> values = validMoves.get(new coordinates(Integer.parseInt(xPane),Integer.parseInt(yPane))).optionscoordinates;
+				for(coordinates optioncount:values){
+					temp=panel[optioncount.x][optioncount.y];
+					piece piece=(piece) temp.getChildren().get(0);
+					if(turnFlag.matches("player1"))
+					{
+						piece.setFill(Color.SLATEGRAY);
+					}
+					else if (turnFlag.matches("player2"))
+					{
+						piece.setFill(Color.AQUA);
+					}
+				}
+			}
 		}
-		catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-				| SecurityException e)
-		{
-			e.printStackTrace();
-		}
-		piece piece=(piece) temp.getChildren().get(0);
-		if(turnFlag.matches("player1"))
-		{
-			piece.setFill(Color.SLATEGRAY);
-		}
-		else if (turnFlag.matches("player2"))
-		{
-			piece.setFill(Color.AQUA);
-		}
-		}
-*/
+		});
+			}
 	}
 
+	//click handler for choosing a move, after clicking a move and establishing the coordinates it sends them to makemove to actually change the board
 	@FXML
 	void movePieces(MouseEvent event){
 		Pane temp = null;
-		if(!this.computerFlagP1 &&( this.turnFlag.matches("player1") || !this.computerFlagP2)){
+		if(!this.computerFlagP1 &&( this.turnFlag.matches("player1") || !this.computerFlagP2)){//if player VS player
 		temp = (Pane) event.getSource();
 		}
-		makeMove(temp);
 
-		if(computerFlagP2 && turnFlag.matches("player2")){
-			if((calculateMoves(board,validMoves, this.turnFlag))){
-				if(this.turnFlag.matches("player1"))
-					this.turnFlag="player2";
-				else if(this.turnFlag.matches("player2"))
-					this.turnFlag="player1";
-				calculateMoves(board,validMoves, this.turnFlag);
+		if(makeMove(temp)==1)
+			return;
 
-			}else{
-			coordinates temp1 = null;
-			//Random generator = new Random();
-			//Object[] values = validMoves.keySet().toArray();
-			//Object randomValue = values[generator.nextInt(values.length)];
-			//temp1=(coordinates) randomValue;
-			MiniMaxNode root = new MiniMaxNode();
-			root.board = board;
-			if (this.turnFlag.equals("player1"))
-				root.blackOrWhite = true; 
-			else 
-				root.blackOrWhite = false;
-			root.children = new ArrayList<MiniMaxNode>();
-			root.isMinOrMax = true;
-			root.value = -1000000000;//Double.MIN_VALUE;
-			countBlackAndWhite(board);
-			root.nOfBlack = blackCounter;
-			root.nOfWhite = whiteCounter;
-			alphaBeta(root, 2);
-			double maxVal= -1000000000;  
-			//for (MiniMaxNode iter : root.children)
-				//if (iter.value == root.value)
-					//temp1 = iter.coord;
-			
-			for (MiniMaxNode iter : root.children){
-				
-				if (iter.value >= root.value) {
-					root.value = iter.value;
-					temp1 = iter.coord;
+
+		//after playing the players turn, play a computer turn.
+		EventQueue.invokeLater(new Runnable(){
+			public void run(){
+				while(computerFlagP2 && turnFlag.matches("player2")){
+				movePieces();
 				}
 			}
-			try
-			{
-				temp = (Pane) getClass().getDeclaredField("s" + Integer.toString(temp1.x) + "_" + Integer.toString(temp1.y))
-						.get(this);
-			}
-			catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-					| SecurityException e)
-			{
-				System.out.println("it was "+turnFlag+"with chosen move:"+ temp.getId());
-				e.printStackTrace();
-			}
-			makeMove(temp);
-			}
-		}
+		});
 	}
-	void movePieces(){
+	void movePieces(){	//overloaded function for PC VS PC play, requires no mouse trigger, establishes a move depending on results from minimax and alpha beta.
+		//filling all the required data and sending to the chosen function.
 		Pane temp = null;
-		if (computerFlagP1){
-			coordinates temp1;
-			Random generator = new Random();
-			Object[] values = validMoves.keySet().toArray();
-			if(values.length!=0){
-			Object randomValue = values[generator.nextInt(values.length)];
-			temp1=(coordinates) randomValue;
-			try
-			{
-				temp = (Pane) getClass().getDeclaredField("s" + Integer.toString(temp1.x) + "_" + Integer.toString(temp1.y))
-						.get(this);
-			}
-			catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-					| SecurityException e)
-			{
-				e.printStackTrace();
-			}
-			System.out.println(turnFlag+" plays:"+"x: "+temp1.x+"_"+"y:"+temp1.y);
-			makeMove(temp);
+		coordinates temp1 = null;
+		MiniMaxNode root = new MiniMaxNode();
+		root.board = board;
+		if (this.turnFlag.equals("player1"))
+			root.blackOrWhite = true;
+		else
+			root.blackOrWhite = false;
+		root.children = new ArrayList<MiniMaxNode>();
+		root.isMinOrMax = true;
+		root.value = -1000000000;//Double.MIN_VALUE;
+		countBlackAndWhite(board);
+		root.nOfBlack = blackCounter;
+		root.nOfWhite = whiteCounter;
+		if(turnFlag.matches("player1")){
+			switch (this.p1MinOrMax){
+			case "MiniMax":
+				minimax(root,depth);
+				break;
+			case "Alpha-Beta":
+				alphaBeta(root, depth);
+				break;
 			}
 		}
-		/*try {
-			TimeUnit.SECONDS.sleep(1);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}*/
-		if(computerFlagP2 && turnFlag.matches("player2")){
-			coordinates temp1;
-			Random generator = new Random();
-			Object[] values = validMoves.keySet().toArray();
-			if(values.length!=0){
-			Object randomValue = values[generator.nextInt(values.length)];
-			temp1=(coordinates) randomValue;
-			try
-			{
-				temp = (Pane) getClass().getDeclaredField("s" + Integer.toString(temp1.x) + "_" + Integer.toString(temp1.y))
-						.get(this);
+		else if(turnFlag.matches("player2")){
+			switch (this.p2MinOrMax){
+			case "MiniMax":
+				minimax(root,depth);
+				break;
+			case "Alpha-Beta":
+				alphaBeta(root, depth);
+				break;
 			}
-			catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-					| SecurityException e)
-			{
-				e.printStackTrace();
-			}
-			System.out.println(turnFlag+" plays:"+"x: "+temp1.x+"_"+"y:"+temp1.y);
-			makeMove(temp);
-			}
-			else
-				turnFlag="player1";
 		}
+		for (MiniMaxNode iter : root.children){
+
+			if (iter.value >= root.value) {
+				root.value = iter.value;
+				temp1 = iter.coord;
+				break;
+			}
+		}
+		temp=panel[temp1.x][temp1.y];
+		//acquiring the chosen panel according to its name.
+		//EventQueue.invokeLater(new Runnable(){
+		//	public void run(){
+		//	}});
+		makeMove(temp);
 	}
 
-	void makeMove(Pane temp)
+	  int makeMove(Pane temp)
 	{
+		 if(!firstTurn)
+		 {
+			 validMoves.clear();
+			 calculateMoves(board,this.validMoves,this.turnFlag);
+		 }
+		 else
+			 firstTurn=false;
+
 		Color color = new Color(0, 0, 0, 0);
-		Object panetochange = null;
+		Pane panetochange = null;
 		int yIndex=Integer.parseInt(temp.getId().substring(1).split("_")[1]);
 		int xIndex=Integer.parseInt(temp.getId().substring(1).split("_")[0]);
+		//get the pieces to covert according to the chosen move
 		if(!this.validMoves.isEmpty() && this.validMoves.containsKey(new coordinates(xIndex,yIndex))){
 			ArrayList<coordinates> pickedOption=this.validMoves.get(new coordinates(xIndex,yIndex)).optionscoordinates;
+
 			while(!pickedOption.isEmpty())
 			{
 				int xcor,ycor;
 				xcor=pickedOption.get(0).x;
 				ycor=pickedOption.get(0).y;
-				try
-				{
-					panetochange = getClass().getDeclaredField("s" + Integer.toString(xcor) + "_" + Integer.toString(ycor))
-							.get(this);
-				}
-				catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-						| SecurityException e)
-				{
-					e.printStackTrace();
-				}
+				panetochange=panel[xcor][ycor];
+				//change actual pieces color
 				Pane temp1=(Pane) panetochange;
-				piece piece;
+				chageBoard switchColor = new chageBoard(temp1,pickedOption,xcor,ycor);
+				switchColor.changePieces();
+				/*piece piece;
 				piece=(piece) temp1.getChildren().get(0);
-				if(this.turnFlag.matches("player1"))
+				if(turnFlag.matches("player1"))
 				{
 					piece.setFill(Color.AQUA);
 					board[xcor][ycor]=1;
 				}
-				else if (this.turnFlag.matches("player2"))
+				else if (turnFlag.matches("player2"))
 				{
 					piece.setFill(Color.SLATEGRAY);
 					board[xcor][ycor]=2;
 				}
 				temp1.setDisable(true);
-				pickedOption.remove(0);
-				}
+				pickedOption.remove(0);*/
+			}
+
+			}
 			Iterator<Map.Entry<coordinates,options>> it=this.validMoves.entrySet().iterator();
 			Object optionToDisable = null;
 			while(it.hasNext())
 			{
 				Map.Entry<coordinates,options> entry=it.next();
-					try {
-						optionToDisable = getClass().getDeclaredField("s"+Integer.toString(entry.getKey().x)+"_"+Integer.toString(entry.getKey().y)).get(this);
-					} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-						e.printStackTrace();
-					}
+				optionToDisable=panel[entry.getKey().x][entry.getKey().y];
+				//disable the options for one player to remove them from boards towards other player turn.
 					Pane paneDisable=(Pane)optionToDisable;
 					paneDisable.setDisable(true);
 			}
+			//update board to current status and change player turn.
 		if (this.turnFlag.matches("player1"))
 		{
 			color = Color.AQUA;
 			this.board[xIndex][yIndex] = 1;
 			this.turnFlag="player2";
-		} else if (this.turnFlag.matches("player2"))
+		}
+		else if (this.turnFlag.matches("player2"))
 		{
 			color = Color.SLATEGRAY;
 			this.board[xIndex][yIndex] = 2;
 			this.turnFlag="player1";
 		}
+		//place new piece in chosen panel
 		piece circle = new piece(24, color);
 		circle.relocate(2, 2);
 		pcVSpc pc=new pcVSpc();
 		pc.change(temp,circle);
-
 		temp.setDisable(true);
-		this.validMoves.clear();
-		}
-
-		if((calculateMoves(board,validMoves, this.turnFlag))){
-
+		this.validMoves.clear();//get next player moves
+		if((calculateMoves(board,validMoves,this.turnFlag))){//check if next player has moves, if not, change back to the current player
 			if(this.turnFlag.matches("player1"))
 				this.turnFlag="player2";
 			else if(this.turnFlag.matches("player2"))
 				this.turnFlag="player1";
-			calculateMoves(board,validMoves, this.turnFlag);
-
+			if (calculateMoves(board,validMoves,this.turnFlag)){
+			//if both players has no moves count and finish the game
+				countBlackAndWhite(board);
+				if(whiteCounter>blackCounter)
+					winner.setText("Player 1 Wins");
+				if(whiteCounter<blackCounter)
+					winner.setText("Player 2 Wins");
+				endGame.setVisible(true);
+				return 1;
+			}
 		}
-		//if computer
-		//minmax
-	}
+		 if(turnFlag.matches("player1"))
+			 ((piece)this.turnShow.getChildren().get(0)).setFill(Color.AQUA);
 
-	@FXML
-	public void initialize() throws InterruptedException
-	{
-		/*piece first = new piece(24, Color.AQUA);
-		first.relocate(2, 2);
-		this.s0_0.getChildren().add(first);
-		this.board[0][0] = 1;
+		 if(turnFlag.matches("player2"))
+			 ((piece)this.turnShow.getChildren().get(0)).setFill(Color.SLATEGRAY);
+		return 0;
+}
 
-		piece second = new piece(24, Color.AQUA);
-		second.relocate(2, 2);
-		this.s1_1.getChildren().add(second);
-		this.board[1][1] = 1;
+	  @FXML
+	  //show score and load setting view
+	    void newGame(ActionEvent event) throws IOException {
+		  FXMLLoader loader = new FXMLLoader();
+			Parent home_page_parent = loader.load(getClass().getResource(
+					"params.fxml").openStream());
+			Scene board = new Scene(home_page_parent);
+			Stage board_stage = (Stage) ((Node) event.getSource()).getScene()
+					.getWindow();
+			board_stage.setScene(board);
+			board_stage.show();
+	    }
 
-		piece third = new piece(24, Color.SLATEGRAY);
-		third.relocate(2, 2);
-		this.s1_0.getChildren().add(third);
-		this.board[1][0] = 2;
-
-		piece fourth = new piece(24, Color.SLATEGRAY);
-		fourth.relocate(2, 2);
-		this.s0_1.getChildren().add(fourth);
-		this.board[0][1] = 2;
-		s6_5.setDisable(true);
-		calculateMoves(this.board,this.validMoves);
-		if(this.computerFlagP1){*/
-
-
-
-
+	public void initializeBoard()
+	{//initialize board and set everything
+		Pane toInsert = null;
+		for (int i = 0; i < panel.length; i++) {
+		    for (int j = 0; j < panel[i].length; j++) {
+		        try {
+		        	toInsert = (Pane) getClass().getDeclaredField("s"+Integer.toString(i)+"_"+Integer.toString(j)).get(this);
+				} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+					e.printStackTrace();
+				}
+		        panel[i][j] =  toInsert;
+		    }
+		}
+		piece player = new piece(24, Color.AQUA);
+		player.relocate(2, 2);
+		this.turnShow.getChildren().add(player);
 		piece first = new piece(24, Color.AQUA);
 		first.relocate(2, 2);
 		s5_5.getChildren().add(first);
@@ -455,34 +465,80 @@ class pcVSpc implements Runnable {
 		s6_5.getChildren().add(fourth);
 		board[6][5] = 2;
 		calculateMoves(board,validMoves, this.turnFlag);
-		if(computerFlagP1){
-			pcVSpc functioncall =new pcVSpc();
-			Thread thread= new Thread(functioncall);
-			thread.start();
-
+		if(computerFlagP1){//if Pc VS Pc, run another thread and the proper function.
+			EventQueue.invokeLater(new Runnable(){
+				public void run(){
+					while(true){
+						if(whiteCounter+blackCounter<=142){
+							try {
+								TimeUnit.MILLISECONDS.sleep(40);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						movePieces();
+						try {
+							TimeUnit.MILLISECONDS.sleep(40);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						}
+						else{
+							if(whiteCounter>blackCounter)
+								winner.setText("Player 1 Wins");
+							if(whiteCounter<blackCounter)
+								winner.setText("Player 2 Wins");
+							endGame.setVisible(true);
+							break;
+						}
+					}
+				}
+			});
 		}
-System.out.print("x");
+	}
+
+	//next block is getters functions to retrieve setting from previous scene.
+	public void GetHeuristic1(String Heuristic)
+	{
+		this.p2Heuristic=Heuristic;
+	}
+
+	public void GetHeuristic2(String Heuristic)
+	{
+		this.p2Heuristic=Heuristic;
+	}
+
+	public void getAiFunction(String function)
+	{
+		this.p1MinOrMax=function;
+	}
+	public void getAiFunction2(String value) {
+		this.p2MinOrMax=value;
 	}
 
 	public void getDifficulty(String difficulty)
 	{
-		System.out.println(difficulty);
+		this.depth=Integer.parseInt(difficulty);
 	}
 
 	public void getPlayerOrComputer(int playAgainst)
 	{
-
-		//human vs. Pc-->1
-		//human vs. human-->2
-		//Pc vs. Pc-->3
-		System.out.println(playAgainst);
+		switch (playAgainst){
+			case 1://human vs. Pc-->1
+				this.computerFlagP1=false;
+				this.computerFlagP2=true;
+				break;
+			case 2://human vs. human-->2
+				this.computerFlagP1=false;
+				this.computerFlagP2=false;
+				break;
+			case 3://Pc vs. Pc-->3
+				this.computerFlagP1=true;
+				this.computerFlagP2=true;
+		}
 	}
-	/*
-	 * maybe switch to working with a matrix, and color the pieces according to
-	 * the matrix, it'll be easier should check it in the morning, after
-	 * updating the matrix that a click has been made, update the matrix, go
-	 * through all of it and switch colors
-	 */
+
+
+	//end
 
 	public coordinates getCoordinates(String name)
 	{
@@ -491,7 +547,7 @@ System.out.print("x");
 	}
 
 	public boolean calculateMoves(byte[][] board,Hashtable<coordinates,options> options, String turnFlag)
-	{
+	{//calculating players moves using check lines.
 		int playerNumber = 0;
 		if (turnFlag.matches("player1"))
 			playerNumber = 1;
@@ -516,8 +572,6 @@ System.out.print("x");
 				}
 			}
 		}
-
-		//System.out.print("finished moves");
 		return options.isEmpty();
 	}
 
@@ -560,17 +614,7 @@ System.out.print("x");
 			}
 			if ((tempX>=0 && tempX<=11) &&(tempY>=0 && tempY<=11) && board[tempX][tempY] == 0)
 			{
-				Object temp = null;
-				try
-				{
-					temp = getClass().getDeclaredField("s" + Integer.toString(tempX) + "_" + Integer.toString(tempY))
-							.get(this);
-				}
-				catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-						| SecurityException e)
-				{
-					e.printStackTrace();
-				}
+				Pane temp = panel[tempX][tempY];
 				Pane temp1 = (Pane) temp;
 				if(validMoves.containsKey(new coordinates(tempX,tempY)))
 					validMoves.get(new coordinates(tempX,tempY)).optionscoordinates.addAll(tempstreak);
@@ -624,13 +668,7 @@ System.out.print("x");
     		}
     		if((tempX>=0 && tempX<=11) &&(tempY>=0 && tempY<=11) && board[tempX][tempY]==0)
     		{
-    			Object temp = null;
-
-				try {
-					temp = getClass().getDeclaredField("s"+Integer.toString(tempX)+"_"+Integer.toString(tempY)).get(this);
-				} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-					e.printStackTrace();
-				}
+    			Pane temp = panel[tempX][tempY];
 				Pane temp1=(Pane)temp;
 				if(validMoves.containsKey(new coordinates(tempX,tempY)))
 					validMoves.get(new coordinates(tempX,tempY)).optionscoordinates.addAll(tempstreak);
@@ -649,8 +687,7 @@ System.out.print("x");
 		Hashtable<coordinates,options> allOptions=new Hashtable<coordinates,options>();
 		 if (depth <= 0){
 			 // stop step  and also calculate Heuristic func value on the leaf
-			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
-
+			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack);
              return ;
          }
 		 else
@@ -659,9 +696,9 @@ System.out.print("x");
         	    calculateMoves(node.board,allOptions, "player1");
 			 else
 				 calculateMoves(node.board,allOptions, "player2");
-			 
+
         	if (!(allOptions.isEmpty())){
-        	
+
 	        	Iterator<Map.Entry<coordinates,options>> it=allOptions.entrySet().iterator();
 	 			while(it.hasNext())
 	 			{
@@ -702,9 +739,9 @@ System.out.print("x");
 	 				}
 	 			}
         	}else{
-        		node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
+        		node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack);
         	}
-		 
+
  			return;
 
          }
@@ -720,8 +757,8 @@ System.out.print("x");
 
 
 
-	private double HeuristicFunc(int whiteCount, int blackCount, boolean player){
-		if (player){
+	private double HeuristicFunc(int whiteCount, int blackCount){
+		if (this.turnFlag.equals("player1")){
 			return 100*(((double)whiteCount - (double)blackCount) / ((double)whiteCount+(double)blackCount)) ;
 		}
 
@@ -729,14 +766,62 @@ System.out.print("x");
 
 	}
 
-	private double HeuristicFunc2(int whiteCorners, int blackCorners, boolean player){
-		if (player){
+	private double HeuristicFunc2(byte[][] board){
+		int whiteCorners = 0;
+		int blackCorners = 0;
+		if (board[0][0] == 1)
+			whiteCorners++;
+		else if (board[0][0] == 2)
+			blackCorners++;
+
+		if (board[0][11] == 1)
+			whiteCorners++;
+		else if (board[0][11] == 2)
+			blackCorners++;
+
+		if (board[11][0] == 1)
+			whiteCorners++;
+		else if (board[11][0] == 2)
+			blackCorners++;
+
+		if (board[11][11] == 1)
+			whiteCorners++;
+		else if (board[11][11] == 2)
+			blackCorners++;
+
+		if ((whiteCorners+blackCorners) == 0){
+			return 0;
+		}
+		else if (this.turnFlag.equals("player1")){
+
+
 			return 100*(((double)whiteCorners - (double)blackCorners) / ((double)whiteCorners+(double)blackCorners)) ;
 		}
 
 		return 100*(((double)blackCorners - (double)whiteCorners)/ ((double)whiteCorners+(double)blackCorners)) ;
 
 	}
+
+
+	private double HeuristicFunc3(byte[][] board){
+		Hashtable<coordinates,options> allOptions=new Hashtable<coordinates,options>();
+		calculateMoves(board,allOptions,"player1");
+		int whiteMoves = allOptions.size();
+		calculateMoves(board,allOptions,"player2");
+		int blackMoves = allOptions.size();
+		if ((whiteMoves+blackMoves) == 0){
+			return 0;
+		}
+		else if (this.turnFlag.equals("player1")){
+
+
+			return 100*(((double)whiteMoves - (double)blackMoves) / ((double)whiteMoves+(double)blackMoves)) ;
+		}
+
+		return 100*(((double)blackMoves - (double)whiteMoves)/ ((double)blackMoves+(double)whiteMoves)) ;
+	}
+
+
 
 
 	private void changeBoard(byte board[][], Map.Entry<coordinates,options> entry, byte bOrW){
@@ -755,18 +840,19 @@ System.out.print("x");
 	private void countBlackAndWhite(byte[][] board){
 		whiteCounter = 0;
 		blackCounter = 0;
-		for (int i=0; i<12; i++)
-			for(int j=0; j<12; j++)
+		for (int i=0; i<12; i++){
+			for(int j=0; j<12; j++){
 				if(board[i][j]== 1)
 					whiteCounter++;
 				else if(board[i][j]== 2)
 			        blackCounter++;
+			}
+		}
 
 	}
 
 	void alphaBeta(MiniMaxNode node, int depth){
 		node.value = maxValue ( node, -1000000000, Double.MAX_VALUE, depth );
-
 	}
 
 	double maxValue(MiniMaxNode node, double alpha, double beta, int depth){
@@ -774,7 +860,7 @@ System.out.print("x");
 		Hashtable<coordinates,options> allOptions=new Hashtable<coordinates,options>();
 		 if (depth <= 0){
 			 // stop step  and also calculate Heuristic func value on the leaf
-			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
+			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack);
 
             return node.value ;
         }else{
@@ -782,7 +868,7 @@ System.out.print("x");
         	    calculateMoves(node.board,allOptions, "player1");
 			 else
 				 calculateMoves(node.board,allOptions, "player2");
-        	
+
         	if (!(allOptions.isEmpty())){
 	        	Iterator<Map.Entry<coordinates,options>> it=allOptions.entrySet().iterator();
 	 			while(it.hasNext())
@@ -799,16 +885,19 @@ System.out.print("x");
 	 					newNode.value = Double.MAX_VALUE;
 	 				}
 	 				node.children.add(newNode);
-	 				byte tempBoW= (byte) (((newNode.blackOrWhite) ? 1 : 0) + 1);
-	 				changeBoard(newNode.board, entry, tempBoW);
 	 				newNode.blackOrWhite = !node.blackOrWhite;
-	 				if(newNode.blackOrWhite){
+	 				byte tempBoW= (byte) (((newNode.blackOrWhite) ? 1 : 0) + 1);
+	 				if(newNode.blackOrWhite)
+	 				{
 	 					newNode.nOfBlack = node.nOfBlack + entry.getValue().optionscoordinates.size() + 1;
 	 					newNode.nOfWhite = node.nOfWhite - entry.getValue().optionscoordinates.size();
-	 				}else{
+	 				}
+	 				else
+	 				{
 	 					newNode.nOfWhite = node.nOfWhite + entry.getValue().optionscoordinates.size() + 1;
 	 					newNode.nOfBlack = node.nOfBlack - entry.getValue().optionscoordinates.size();
 	 				}
+	 				changeBoard(newNode.board, entry, tempBoW);
 	 				node.value = Math.max(node.value, minValue(newNode, alpha, beta, depth - 1));
 	 				if (node.value >= beta)
 	 					break;
@@ -817,7 +906,7 @@ System.out.print("x");
 	 			}
         	}
         	else{
-        		node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
+        		node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack);
         	}
  			return node.value;
 
@@ -828,7 +917,7 @@ System.out.print("x");
 		Hashtable<coordinates,options> allOptions=new Hashtable<coordinates,options>();
 		 if (depth <= 0){
 			 // stop step  and also calculate Heuristic func value on the leaf
-			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
+			 node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack);
 
            return node.value ;
        }else{
@@ -852,31 +941,30 @@ System.out.print("x");
 						newNode.value = Double.MAX_VALUE;
 					}
 					node.children.add(newNode);
-					byte tempBoW= (byte) (((newNode.blackOrWhite) ? 1 : 0) + 1);
-					changeBoard(newNode.board, entry, tempBoW);
 					newNode.blackOrWhite = !node.blackOrWhite;
-					if(newNode.blackOrWhite){
-						newNode.nOfBlack = node.nOfBlack + entry.getValue().optionscoordinates.size() + 1;
-						newNode.nOfWhite = node.nOfWhite - entry.getValue().optionscoordinates.size();
-					}else{
-						newNode.nOfWhite = node.nOfWhite + entry.getValue().optionscoordinates.size() + 1;
-						newNode.nOfBlack = node.nOfBlack - entry.getValue().optionscoordinates.size();
-					}
+	 				byte tempBoW= (byte) (((newNode.blackOrWhite) ? 1 : 0) + 1);
+	 				if(newNode.blackOrWhite)
+	 				{
+	 					newNode.nOfBlack = node.nOfBlack + entry.getValue().optionscoordinates.size() + 1;
+	 					newNode.nOfWhite = node.nOfWhite - entry.getValue().optionscoordinates.size();
+	 				}
+	 				else
+	 				{
+	 					newNode.nOfWhite = node.nOfWhite + entry.getValue().optionscoordinates.size() + 1;
+	 					newNode.nOfBlack = node.nOfBlack - entry.getValue().optionscoordinates.size();
+	 				}
+	 				changeBoard(newNode.board, entry, tempBoW);
 					node.value = Math.min(node.value, maxValue(newNode, alpha, beta, depth - 1));
 					if (node.value <= alpha)
 						break;
 					beta = Math.min (beta, node.value);
-	
 				}
     	   }
     	   else{
-       		node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack, node.blackOrWhite);
+       		node.value = HeuristicFunc(node.nOfWhite,node.nOfBlack);
        	}
 			return node.value;
 
        }
-
 	}
-
-
 }
